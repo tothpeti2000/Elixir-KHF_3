@@ -54,12 +54,15 @@ defmodule Khf3 do
   # érték pedig a hibahelyeket felsoroló lista (üres, ha nincs hiba)
   def check_sol({tents_count_rows, tents_count_cols, tree_fields}, directions) do
     n = length(tents_count_rows)
+    m = length(tents_count_cols)
     tent_fields = get_tent_fields(tree_fields, directions)
 
     # tents_count_rows = [1, 1, 0, 3, 0]
     # tents_count_cols = [1, 0, 2, 0, 2]
     # tree_fields = [{1, 2}, {3, 3}, {3, 5}, {5, 1}, {5, 5}]
     # tent_fields = [{1, 3}, {4, 3}, {2, 5}, {4, 1}, {4, 5}]
+
+    for i <- 0..length(tents_count_rows) - 1, do: get_row_errors(i + 1, Enum.at(tents_count_rows, i), tent_fields)
   end
 
   @spec get_tent_position(tree_field :: field, direction :: dir) :: tent_position :: field
@@ -76,5 +79,10 @@ defmodule Khf3 do
   defp get_tent_fields(tree_fields, directions) do
     for i <- 0..(length(tree_fields) - 1),
         do: get_tent_position(Enum.at(tree_fields, i), Enum.at(directions, i))
+  end
+
+  @spec get_row_errors(row:: Integer, expected_tent_count :: Integer, tent_fields :: [field]) :: errors :: err_rows
+  defp get_row_errors(row, expected_tent_count, tent_fields) do
+
   end
 end
