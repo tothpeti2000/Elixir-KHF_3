@@ -2,7 +2,7 @@ defmodule Khf3 do
   @moduledoc """
   Kemping helyessége
   Camping correctness
-
+  
   @author "Egyetemi Hallgató <egy.hallg@dp.vik.bme.hu>"
   @date   "2022-10-04"
   ...
@@ -53,8 +53,6 @@ defmodule Khf3 do
   # kulcs-érték párok, melyekben a kulcs a hiba jellegére utal, az
   # érték pedig a hibahelyeket felsoroló lista (üres, ha nincs hiba)
   def check_sol({tents_count_rows, tents_count_cols, tree_fields}, directions) do
-    n = length(tents_count_rows)
-    m = length(tents_count_cols)
     tent_fields = get_tent_fields(tree_fields, directions)
 
     # tents_count_rows = [1, 1, 0, 3, 0]
@@ -62,7 +60,11 @@ defmodule Khf3 do
     # tree_fields = [{1, 2}, {3, 3}, {3, 5}, {5, 1}, {5, 5}]
     # tent_fields = [{1, 3}, {4, 3}, {2, 5}, {4, 1}, {4, 5}]
 
-    for i <- 0..length(tents_count_rows) - 1, do: get_row_errors(i + 1, Enum.at(tents_count_rows, i), tent_fields)
+    row_errors = get_row_errors(tents_count_rows, tent_fields)
+    col_errors = get_col_errors(tents_count_cols, tent_fields)
+    touch_errors = get_touch_errors(tent_fields)
+
+    {row_errors, col_errors, touch_errors}
   end
 
   @spec get_tent_position(tree_field :: field, direction :: dir) :: tent_position :: field
@@ -81,8 +83,63 @@ defmodule Khf3 do
         do: get_tent_position(Enum.at(tree_fields, i), Enum.at(directions, i))
   end
 
-  @spec get_row_errors(row:: Integer, expected_tent_count :: Integer, tent_fields :: [field]) :: errors :: err_rows
-  defp get_row_errors(row, expected_tent_count, tent_fields) do
+  @spec get_row_errors(tents_count_rows :: [Integer], tent_fields :: [field]) ::
+          errors :: err_rows
+  defp get_row_errors(tents_count_rows, tent_fields) do
+    errors =
+      for i <- 0..(length(tents_count_rows) - 1),
+          has_row_error(i + 1, Enum.at(tents_count_rows, i), tent_fields) === :error,
+          do: i + 1
 
+    %{err_rows: errors}
+  end
+
+  @spec has_row_error(row :: Integer, expected_count :: Integer, tent_fields :: [field]) ::
+          :ok | :error
+  defp has_row_error(_, expected_count, _) when expected_count < 0, do: :ok
+
+  defp has_row_error(row, expected_count, tent_fields) do
+    actual_count = length(for {i, _} <- tent_fields, 0, i === row, do: i)
+
+    cond do
+      actual_count === expected_count -> :ok
+      true -> :error
+    end
+  end
+
+  @spec get_col_errors(tents_count_cols :: [Integer], tent_fields :: [field]) ::
+          errors :: err_rows
+  defp get_col_errors(tents_count_cols, tent_fields) do
+    errors =
+      for i <- 0..(length(tents_count_cols) - 1),
+          has_col_error(i + 1, Enum.at(tents_count_cols, i), tent_fields) === :error,
+          do: i + 1
+
+    %{err_cols: errors}
+  end
+
+  @spec has_col_error(col :: Integer, expected_count :: Integer, tent_fields :: [field]) ::
+          :ok | :error
+  defp has_col_error(_, expected_count, _) when expected_count < 0, do: :ok
+
+  defp has_col_error(col, expected_count, tent_fields) do
+    actual_count = length(for {_, j} <- tent_fields, 0, j === col, do: j)
+
+    cond do
+      actual_count === expected_count -> :ok
+      true -> :error
+    end
+  end
+
+  @spec get_touch_errors(tent_fields :: [field]) :: errors :: err_touch
+  defp get_touch_errors(tent_fields) do
+    errors =
+      for {i1, j1} <- tent_fields,
+          {i2, j2} <- tent_fields,
+          i1 !== i2 && j1 !== j2 &&
+            abs(i1 - i2) <= 1 && abs(j1 - j2) <= 1,
+          do: {i1, j1}
+
+    %{err_touch: Enum.uniq(errors)}
   end
 end
