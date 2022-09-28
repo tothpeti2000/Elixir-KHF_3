@@ -79,8 +79,11 @@ defmodule Khf3 do
   defp get_tent_fields(_, []), do: []
 
   defp get_tent_fields(tree_fields, directions) do
-    for i <- 0..(length(tree_fields) - 1),
-        do: get_tent_position(Enum.at(tree_fields, i), Enum.at(directions, i))
+    for(
+      i <- 0..(length(tree_fields) - 1),
+      do: get_tent_position(Enum.at(tree_fields, i), Enum.at(directions, i))
+    )
+    |> List.keysort(0)
   end
 
   @spec get_row_errors(tents_count_rows :: [Integer], tent_fields :: [field]) ::
