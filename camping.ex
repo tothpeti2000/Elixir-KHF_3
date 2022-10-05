@@ -1,10 +1,9 @@
 defmodule Khf3 do
   @moduledoc """
-  Kemping helyessége
   Camping correctness
   
-  @author "Egyetemi Hallgató <egy.hallg@dp.vik.bme.hu>"
-  @date   "2022-10-04"
+  @author "Tóth Péter tothpeti2000@edu.bme.hu"
+  @date   "2022-10-05"
   ...
   """
 
@@ -30,35 +29,27 @@ defmodule Khf3 do
   # List of tent position directions relative to the trees
   @type tent_dirs :: [dir]
 
-  # a fák száma a kempingben
+  # Numner of trees in teh camping
   @type cnt_tree :: integer
-  # az elemek száma a sátorpozíciók irányának listájában
+  # Number of elements in the tent direction list
   @type cnt_tent :: integer
-  # a sátrak száma rossz a felsorolt sorokban
+  # The number of tents is incorrect in the given rows
   @type err_rows :: %{err_rows: [integer]}
-  # a sátrak száma rossz a felsorolt oszlopokban
+  # The number of tents is incorrect in the given columns
   @type err_cols :: %{err_cols: [integer]}
-  # a felsorolt koordinátájú sátrak másikat érintenek
+  # The tents with the given coordinates touch another tent
   @type err_touch :: %{err_touch: [field]}
-  # hibaleíró hármas
+  # Tuple describing the puzzle errors
   @type errs_desc :: {err_rows, err_cols, err_touch}
 
   @spec check_sol(pd :: puzzle_desc, ds :: tent_dirs) :: ed :: errs_desc
-  # Az {rs, cs, ts} = pd feladványleíró és a ds sátorirány-lista
-  # alapján elvégzett ellenőrzés eredménye a cd hibaleíró, ahol
-  #   rs a sátrak soronként elvárt számának a listája,
-  #   cs a sátrak oszloponként elvárt számának a listája,
-  #   ts a fákat tartalmazó parcellák koordinátájának a listája
-  # Az {e_rows, e_cols, e_touch} = ed hármas elemei olyan
-  # kulcs-érték párok, melyekben a kulcs a hiba jellegére utal, az
-  # érték pedig a hibahelyeket felsoroló lista (üres, ha nincs hiba)
+  # We check the correctness of the puzzle solution based on the {rs, cs, ts} = pd puzzle description and the ds tent direction list, this gives us the ed error description
+  #   rs ~ list of the expected tent count per row
+  #   cs ~ list of the expected tent count per column
+  #   ts ~ list of the tree coordintes
+  # The elements of the {e_rows, e_cols, e_touch} = ed tuple are key-value pairs where the key describes the error type and the value is the list of the error places (empty if there are no errors)
   def check_sol({tents_count_rows, tents_count_cols, tree_fields}, directions) do
     tent_fields = get_tent_fields(tree_fields, directions)
-
-    # tents_count_rows = [1, 1, 0, 3, 0]
-    # tents_count_cols = [1, 0, 2, 0, 2]
-    # tree_fields = [{1, 2}, {3, 3}, {3, 5}, {5, 1}, {5, 5}]
-    # tent_fields = [{1, 3}, {4, 3}, {2, 5}, {4, 1}, {4, 5}]
 
     row_errors = get_row_errors(tents_count_rows, tent_fields)
     col_errors = get_col_errors(tents_count_cols, tent_fields)
@@ -68,14 +59,14 @@ defmodule Khf3 do
   end
 
   @spec get_tent_position(tree_field :: field, direction :: dir) :: tent_position :: field
-  # Returns data about a tent based on the position of its corresponding tree and the given direction
+  # Returns the position of a tent based on the position of its corresponding tree and the given direction
   defp get_tent_position({i, j}, :n), do: {i - 1, j}
   defp get_tent_position({i, j}, :e), do: {i, j + 1}
   defp get_tent_position({i, j}, :s), do: {i + 1, j}
   defp get_tent_position({i, j}, :w), do: {i, j - 1}
 
   @spec get_tent_fields(tree_fields :: [field], directions :: [dir]) :: [field]
-  # Returns data about all tents based on all trees and the given directions
+  # Returns the positions of all tents based on all trees and the given directions
   defp get_tent_fields(_, []), do: []
 
   defp get_tent_fields(tree_fields, directions) do
@@ -88,6 +79,7 @@ defmodule Khf3 do
 
   @spec get_row_errors(tents_count_rows :: [Integer], tent_fields :: [field]) ::
           errors :: err_rows
+  # Returns the row errors based on the expected row counts and the tent coordinates
   defp get_row_errors(tents_count_rows, tent_fields) do
     errors =
       for i <- 0..(length(tents_count_rows) - 1),
@@ -99,6 +91,7 @@ defmodule Khf3 do
 
   @spec has_row_error(row :: Integer, expected_count :: Integer, tent_fields :: [field]) ::
           :ok | :error
+  # Checks if a row contains the expected number of tents
   defp has_row_error(_, expected_count, _) when expected_count < 0, do: :ok
 
   defp has_row_error(row, expected_count, tent_fields) do
@@ -112,6 +105,7 @@ defmodule Khf3 do
 
   @spec get_col_errors(tents_count_cols :: [Integer], tent_fields :: [field]) ::
           errors :: err_rows
+  # Returns the col errors based on the expected col counts and the tent coordinates
   defp get_col_errors(tents_count_cols, tent_fields) do
     errors =
       for i <- 0..(length(tents_count_cols) - 1),
@@ -123,6 +117,7 @@ defmodule Khf3 do
 
   @spec has_col_error(col :: Integer, expected_count :: Integer, tent_fields :: [field]) ::
           :ok | :error
+  # Checks if a col contains the expected number of tents
   defp has_col_error(_, expected_count, _) when expected_count < 0, do: :ok
 
   defp has_col_error(col, expected_count, tent_fields) do
@@ -135,6 +130,7 @@ defmodule Khf3 do
   end
 
   @spec get_touch_errors(tent_fields :: [field]) :: errors :: err_touch
+  # Returns the tents that touch each other based on the tent coordinates
   defp get_touch_errors(tent_fields) do
     errors =
       for {i1, j1} <- tent_fields,
