@@ -133,10 +133,9 @@ defmodule Khf3 do
   # Returns the tents that touch each other based on the tent coordinates
   defp get_touch_errors(tent_fields) do
     errors =
-      for {i1, j1} <- tent_fields,
-          {i2, j2} <- tent_fields,
-          i1 !== i2 && j1 !== j2 &&
-            abs(i1 - i2) <= 1 && abs(j1 - j2) <= 1,
+      for {i1, j1} = field_1 <- tent_fields,
+          {i2, j2} <- tent_fields -- [field_1],
+          abs(i1 - i2) <= 1 && abs(j1 - j2) <= 1,
           do: {i1, j1}
 
     %{err_touch: Enum.uniq(errors)}
